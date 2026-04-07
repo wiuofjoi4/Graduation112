@@ -298,52 +298,36 @@
     #social-credit { bottom: 1rem; left: 1rem; }
   }
 
-  /* Landscape prompt for mobile */
-  #landscape-prompt {
-    display: none;
-    position: fixed; inset: 0;
-    background: #000;
-    z-index: 10000;
-    flex-direction: column; align-items: center; justify-content: center;
-    color: #00bfff; font-family: 'Orbitron', sans-serif;
-    text-align: center; padding: 2rem;
-  }
-  .phone-icon {
-    width: 40px; height: 70px;
-    border: 3px solid #00bfff; border-radius: 6px;
-    margin-bottom: 2rem;
-    position: relative;
-    animation: rotatePhone 2s ease-in-out infinite;
-  }
-  .phone-icon::after {
-    content: ''; position: absolute;
-    bottom: 4px; left: 50%; transform: translateX(-50%);
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #00bfff;
-  }
-  @keyframes rotatePhone {
-    0%   { transform: rotate(0deg); }
-    50%  { transform: rotate(-90deg); }
-    100% { transform: rotate(-90deg); }
-  }
+  /* Portrait layout for mobile */
   @media screen and (orientation: portrait) and (max-width: 900px) {
-    #landscape-prompt { display: flex; }
-    #canvas-container, #start-screen, #grad-message, #replay-btn, #social-credit, #scene-hud { display: none !important; }
+    .start-title { font-size: clamp(2.5rem, 10vw, 4rem); margin: 0.5rem 0; }
+    .start-tagline { font-size: clamp(0.5rem, 3vw, 0.7rem); letter-spacing: 0.3em; margin-bottom: 1rem; }
+    .start-logo { font-size: clamp(0.7rem, 4vw, 1.2rem); padding: 0 1rem; margin-bottom: 1.5rem; }
+    .start-year { font-size: clamp(1.2rem, 5vw, 1.5rem); margin-bottom: 2rem; }
+    #start-btn { padding: 0.8rem 2rem; font-size: 0.75rem; width: 80%; }
+    #personalize { bottom: 2rem; flex-direction: column; gap: 0.5rem; }
+    #name-input { width: 100%; text-align: center; }
+    
+    .corner { width: 25px; height: 25px; }
+    .corner-tl { top: 1rem; left: 1rem; } .corner-tr { top: 1rem; right: 1rem; }
+    .corner-bl { bottom: 1rem; left: 1rem; } .corner-br { bottom: 1rem; right: 1rem; }
+    
+    #grad-message { padding: 1.5rem 1rem; }
+    .grad-congrats { font-size: clamp(2rem, 8vw, 3rem); line-height: 1.3; }
+    .grad-dept { font-size: clamp(0.75rem, 4vw, 1.2rem); line-height: 1.8; }
+    .grad-line { margin: 1.5rem auto; width: min(300px, 80vw) !important; }
+    .grad-name { margin-top: 1.5rem; font-size: clamp(1rem, 5vw, 1.5rem); }
+    
+    #scene-hud { font-size: 0.45rem; letter-spacing: 0.3em; width: 100%; text-align: center;}
+    #social-credit { font-size: 0.5rem; bottom: 1rem; right: auto; left: 50%; transform: translateX(-50%); text-align: center; }
+    #replay-btn { bottom: auto; top: 1rem; right: 1rem; padding: 0.5rem 1rem; }
   }
+
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<!-- Landscape Prompt -->
-<div id="landscape-prompt">
-  <div class="phone-icon"></div>
-  <h2>ROTATE YOUR DEVICE</h2>
-  <p style="margin-top:1rem; font-size:0.8rem; letter-spacing:0.1em; line-height:1.6; color:#00bfff88;">
-    Please switch to landscape mode<br>for the full cinematic experience.
-  </p>
-</div>
 
 <div id="scanline"></div>
 <div id="vignette"></div>
@@ -423,6 +407,9 @@ const replayBtn    = document.getElementById('replay-btn');
 const nameInput    = document.getElementById('name-input');
 const gradNameEl   = document.getElementById('grad-name');
 
+// ── Global Mobile Detection (Ensures horizontal phones still get performance boosts)
+const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || Math.min(window.innerWidth, window.innerHeight) < 768;
+
 // ══════════════════════════════════════════
 //  THREE INIT
 // ══════════════════════════════════════════
@@ -435,8 +422,8 @@ function initThree() {
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setSize(innerWidth, innerHeight);
-  const isMobile = innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent);
-  renderer.setPixelRatio(isMobile ? Math.min(devicePixelRatio, 1.25) : Math.min(devicePixelRatio, 2));
+  // Slightly higher limit for landscape mobile so it doesn't look too blurry, but still protects performance
+  renderer.setPixelRatio(IS_MOBILE ? Math.min(devicePixelRatio, 1.5) : Math.min(devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
   container.appendChild(renderer.domElement);
@@ -447,8 +434,12 @@ function initThree() {
     setTimeout(() => {
       const aspect = window.innerWidth / window.innerHeight;
       camera.aspect = aspect;
-      // Provide wider field of view for extreme landscape aspect ratios like 20:9 phones
-      camera.fov = aspect > 2.0 ? 60 : 70;
+      // Provide wider field of view for extreme landscape aspect ratios like 20:9 phones, and tall vertical portrait phones
+      if (aspect < 1.0) {
+        camera.fov = 90; // Much wider vertical FOV so the layout looks good vertically
+      } else {
+        camera.fov = aspect > 2.0 ? 60 : 70;
+      }
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }, 150);
@@ -542,12 +533,11 @@ function makeParticles(count, spread, size, color, opacity) {
 // ══════════════════════════════════════════
 function buildScene1() {
   const group = new THREE.Group();
-  const isMobile = window.innerWidth < 768;
 
   // Stars (two layers)
   for (const [cnt, spread, sz, op] of [
-    [isMobile ? 1200 : 3500, 800, 0.45, 0.8],
-    [isMobile ? 400 : 1000, 300, 0.25, 0.5],
+    [IS_MOBILE ? 1200 : 3500, 800, 0.45, 0.8],
+    [IS_MOBILE ? 400 : 1000, 300, 0.25, 0.5],
   ]) {
     const geo = new THREE.BufferGeometry();
     const pos = new Float32Array(cnt * 3);
@@ -563,7 +553,7 @@ function buildScene1() {
   }
 
   // Blue drift particles
-  const particles = makeParticles(isMobile ? 500 : 1400, 100, 0.4, 0x00bfff, 0.7);
+  const particles = makeParticles(IS_MOBILE ? 500 : 1400, 100, 0.4, 0x00bfff, 0.7);
   group.add(particles);
 
   // Nebula clouds — animated shader planes
@@ -672,8 +662,7 @@ function buildScene2() {
   group.visible = false;
 
   const fibers = [];
-  const isMobile = window.innerWidth < 768;
-  const FIBER_COUNT = isMobile ? 12 : 24;
+  const FIBER_COUNT = IS_MOBILE ? 12 : 24;
 
   // Shader for the CORE of each fiber — bright white-blue hotspot
   const coreMat = new THREE.ShaderMaterial({
@@ -720,7 +709,7 @@ function buildScene2() {
 
     // ── CLADDING: outer glass tube (semi-transparent, dark blue-grey)
     const tubeRadius = 0.055 + Math.random() * 0.025;
-    const claddingGeo = new THREE.TubeGeometry(curve, isMobile ? 50 : 100, tubeRadius, isMobile ? 5 : 8, false);
+    const claddingGeo = new THREE.TubeGeometry(curve, IS_MOBILE ? 50 : 100, tubeRadius, IS_MOBILE ? 5 : 8, false);
     const claddingMat = new THREE.MeshPhysicalMaterial({
       color: 0x0a1a33,
       emissive: 0x001144,
@@ -736,7 +725,7 @@ function buildScene2() {
 
     // ── CORE: inner bright tube (smaller radius, emissive white-blue)
     const coreRadius = tubeRadius * 0.35;
-    const coreGeo = new THREE.TubeGeometry(curve, isMobile ? 50 : 100, coreRadius, isMobile ? 4 : 6, false);
+    const coreGeo = new THREE.TubeGeometry(curve, IS_MOBILE ? 50 : 100, coreRadius, IS_MOBILE ? 4 : 6, false);
     const coreMeshMat = new THREE.MeshBasicMaterial({
       color: 0xffffff, transparent: true, opacity: 0.0,
       blending: THREE.AdditiveBlending, depthWrite: false
@@ -828,7 +817,6 @@ function buildScene3() {
   const group = new THREE.Group();
   group.visible = false;
 
-  const isMobile = window.innerWidth < 768;
   // ── Warp tunnel — cylindrical inner wall (like inside a fiber optic cable)
   const tunnelMat = new THREE.ShaderMaterial({
     uniforms: {
@@ -885,7 +873,7 @@ function buildScene3() {
   });
 
   const tunnel = new THREE.Mesh(
-    new THREE.CylinderGeometry(6, 6, 300, isMobile ? 32 : 64, isMobile ? 32 : 64, true),
+    new THREE.CylinderGeometry(6, 6, 300, IS_MOBILE ? 32 : 64, IS_MOBILE ? 32 : 64, true),
     tunnelMat
   );
   tunnel.rotation.x = Math.PI / 2;
@@ -893,7 +881,7 @@ function buildScene3() {
   group.add(tunnel);
 
   // ── Radial streaks (star-field warp effect)
-  const STREAK_COUNT = isMobile ? 300 : 800;
+  const STREAK_COUNT = IS_MOBILE ? 300 : 800;
   const sGeo = new THREE.BufferGeometry();
   const sPos = new Float32Array(STREAK_COUNT * 6);
   const sData = [];
@@ -916,7 +904,7 @@ function buildScene3() {
 
   // Add concentric rings for depth
   const warpRings = [];
-  const ringCount = isMobile ? 15 : 30;
+  const ringCount = IS_MOBILE ? 15 : 30;
   for (let i = 0; i < ringCount; i++) {
     const r = new THREE.Mesh(
       new THREE.TorusGeometry(3 + i * 0.2, 0.04, 6, 64),
@@ -1020,10 +1008,8 @@ function buildScene4() {
   bgGlow.position.z = -30;
   group.add(bgGlow);
 
-  const isMobile = window.innerWidth < 768;
-
   // Floating particles (calm)
-  const particles = makeParticles(isMobile ? 800 : 2000, 80, 0.22, 0x0055ff, 0.35);
+  const particles = makeParticles(IS_MOBILE ? 800 : 2000, 80, 0.22, 0x0055ff, 0.35);
   group.add(particles);
 
   // Horizontal light rule lines
@@ -1038,7 +1024,7 @@ function buildScene4() {
   }
 
   // Orbiting particle ring (decorative)
-  const RING_COUNT = isMobile ? 150 : 400;
+  const RING_COUNT = IS_MOBILE ? 150 : 400;
   const rGeo = new THREE.BufferGeometry();
   const rPos = new Float32Array(RING_COUNT * 3);
   for (let i = 0; i < RING_COUNT; i++) {

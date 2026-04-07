@@ -410,8 +410,7 @@
 
 <!-- Background Music -->
 <audio id="bg-music" preload="auto" loop style="width:0; height:0; position:absolute; visibility:hidden;">
-  <source src="music.mp4" type="audio/mp4">
-  <source src="music.mp4" type="video/mp4">
+  <source src="music.mpeg" type="audio/mpeg">
 </audio>
 
 <button id="replay-btn">↩ REPLAY</button>
@@ -1283,7 +1282,7 @@ function startExperience() {
     bgMusic.volume = 1.0;
     bgMusic.play().catch(e => {
       console.warn("Audio load/play Error:", e);
-      alert("تعذر تشغيل الصوت! تأكد أن الملف اسمه 'music.mp4' وموجود داخل نفس المجلد مع هذا الملف بمساره الصحيح.");
+      alert("تعذر تشغيل الصوت! تأكد أن الملف اسمه 'music.mpeg' وموجود داخل نفس المجلد مع هذا الملف بمساره الصحيح.");
     });
   }
 

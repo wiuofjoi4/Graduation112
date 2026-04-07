@@ -277,25 +277,32 @@
     50%     { box-shadow: 0 0 20px #00bfffbb; }
   }
 
-  /* Responsive dimensions for mobile landscape (short height) */
-  @media screen and (max-height: 500px) and (orientation: landscape) {
-    .start-title { font-size: clamp(2rem, 6vw, 3rem); margin: 0.2rem 0; }
-    .start-year { font-size: clamp(0.8rem, 2vw, 1.2rem); margin-bottom: 0.5rem; }
-    .start-logo { font-size: clamp(0.7rem, 2vw, 1rem); margin-bottom: 0.2rem; }
-    .start-tagline { margin-bottom: 0.2rem; }
-    #personalize { bottom: 0.8rem; }
-    #start-btn { padding: 0.6rem 2.5rem; font-size: 0.7rem; }
-    #grad-message { padding: 1rem; }
-    .grad-congrats { font-size: clamp(1.4rem, 4vw, 2.5rem); margin-bottom: 0.2rem; }
-    .grad-line { margin: 1rem auto; }
-    .grad-dept { font-size: clamp(0.7rem, 2vw, 1.1rem); line-height: 1.5; }
-    .grad-name { margin-top: 1rem; font-size: clamp(0.9rem, 2.5vw, 1.4rem); }
-    .grad-eyebrow { margin-bottom: 1rem; }
-    .corner { width: 25px; height: 25px; }
-    .corner-tl { top: 1rem; left: 1rem; } .corner-tr { top: 1rem; right: 1rem; }
-    .corner-bl { bottom: 1rem; left: 1rem; } .corner-br { bottom: 1rem; right: 1rem; }
-    #replay-btn { bottom: 1rem; right: 1rem; }
-    #social-credit { bottom: 1rem; left: 1rem; }
+  /* Responsive dimensions for mobile landscape (wide width but short vertical height) */
+  @media screen and (orientation: landscape) and (max-width: 950px) {
+    .start-title { font-size: clamp(1.4rem, 5vw, 2.2rem); margin: 0.1rem 0; }
+    .start-year { font-size: clamp(0.7rem, 2vw, 0.9rem); margin-bottom: 0.3rem; }
+    .start-logo { font-size: clamp(0.55rem, 1.5vw, 0.7rem); margin-bottom: 0.1rem; padding: 0; }
+    .start-tagline { margin-bottom: 0.1rem; font-size: clamp(0.45rem, 1vw, 0.6rem); }
+    #start-btn { padding: 0.5rem 2rem; font-size: 0.6rem; }
+    
+    #personalize { bottom: 0.5rem; flex-direction: row; align-items: center; }
+    #name-input-label { display: none; } /* Hide label to save space in horizontal mode */
+    #name-input { width: 160px; font-size: 0.6rem; padding: 0.2rem; }
+    
+    #grad-message { padding: 0.5rem; }
+    .grad-congrats { font-size: clamp(1.2rem, 3.5vw, 2rem); margin-bottom: 0.1rem; line-height: 1.1; }
+    .grad-line { margin: 0.5rem auto; width: min(400px, 70vw) !important; }
+    .grad-dept { font-size: clamp(0.6rem, 1.5vw, 0.9rem); line-height: 1.4; }
+    .grad-name { margin-top: 0.5rem; font-size: clamp(0.8rem, 2vw, 1.2rem); }
+    .grad-eyebrow { margin-bottom: 0.5rem; font-size: clamp(0.5rem, 1.2vw, 0.65rem); }
+    
+    .corner { width: 15px; height: 15px; }
+    .corner-tl { top: 0.5rem; left: 0.5rem; } .corner-tr { top: 0.5rem; right: 0.5rem; }
+    .corner-bl { bottom: 0.5rem; left: 0.5rem; } .corner-br { bottom: 0.5rem; right: 0.5rem; }
+    
+    #scene-hud { top: 0.5rem; font-size: 0.45rem; }
+    #replay-btn { bottom: 0.5rem; right: 0.5rem; padding: 0.4rem 1rem; font-size: 0.5rem; }
+    #social-credit { bottom: 0.5rem; left: 0.5rem; font-size: 0.45rem; line-height: 1.4; }
   }
 
   /* Portrait layout for mobile */

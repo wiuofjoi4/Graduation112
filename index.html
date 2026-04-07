@@ -277,30 +277,30 @@
     50%     { box-shadow: 0 0 20px #00bfffbb; }
   }
 
-  /* Portrait prompt for mobile */
-  #portrait-prompt {
+  /* Landscape prompt for mobile */
+  #landscape-prompt {
     display: none;
     position: fixed; inset: 0; background: #000; z-index: 10000;
     flex-direction: column; align-items: center; justify-content: center;
     color: #00bfff; font-family: 'Orbitron', sans-serif; text-align: center; padding: 2rem;
   }
-  .phone-icon-portrait {
-    width: 60px; height: 35px; border: 3px solid #00bfff; border-radius: 6px;
+  .phone-icon {
+    width: 40px; height: 70px; border: 3px solid #00bfff; border-radius: 6px;
     margin-bottom: 2rem; position: relative;
-    animation: rotateToPortrait 2.5s ease-in-out infinite;
+    animation: rotatePhone 2s ease-in-out infinite;
   }
-  .phone-icon-portrait::after {
+  .phone-icon::after {
     content: ''; position: absolute;
-    top: 50%; right: 4px; transform: translateY(-50%);
-    width: 6px; height: 6px; border-radius: 50%; background: #00bfff;
+    bottom: 4px; left: 50%; transform: translateX(-50%);
+    width: 8px; height: 8px; border-radius: 50%; background: #00bfff;
   }
-  @keyframes rotateToPortrait {
+  @keyframes rotatePhone {
     0%   { transform: rotate(0deg); }
     50%  { transform: rotate(-90deg); }
     100% { transform: rotate(-90deg); }
   }
-  @media screen and (orientation: landscape) and (max-height: 500px) {
-    #portrait-prompt { display: flex; }
+  @media screen and (orientation: portrait) and (max-width: 900px) {
+    #landscape-prompt { display: flex; }
     #canvas-container, #start-screen, #grad-message, #replay-btn, #social-credit, #scene-hud, #scanline, #vignette, #progress-bar { display: none !important; }
   }
 
@@ -335,12 +335,12 @@
 </head>
 <body>
 
-<!-- Portrait Prompt -->
-<div id="portrait-prompt">
-  <div class="phone-icon-portrait"></div>
+<!-- Landscape Prompt -->
+<div id="landscape-prompt">
+  <div class="phone-icon"></div>
   <h2>ROTATE YOUR DEVICE</h2>
   <p style="margin-top:1rem; font-size:0.8rem; letter-spacing:0.1em; line-height:1.6; color:#00bfff88;">
-    Please switch to portrait mode<br>for the full cinematic experience.
+    Please switch to landscape mode<br>for the full cinematic experience.
   </p>
 </div>
 

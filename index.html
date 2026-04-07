@@ -408,9 +408,10 @@
   <div class="grad-name" id="grad-name"></div>
 </div>
 
-<!-- Background Music: ضع الملف بجانب index.html بنفس الاسم music.mpeg -->
+<!-- ضع ملف الصوت بجانب index.html: music.mpeg أو music.mp3 -->
 <audio id="bg-music" preload="auto" loop playsinline style="width:0; height:0; position:absolute; visibility:hidden;">
   <source src="music.mpeg" type="audio/mpeg">
+  <source src="music.mp3" type="audio/mpeg">
 </audio>
 
 <button id="replay-btn">↩ REPLAY</button>
@@ -1246,6 +1247,35 @@ function animate() {
 // ══════════════════════════════════════════
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
+/**
+ * يجب استدعاؤها من داخل معالج النقر مباشرة (قبل أي await/setTimeout).
+ * المتصفحات ترفض play() لاحقاً إن لم يُفتح مسار الصوت بنفس لحظة التفاعل.
+ */
+function primeBackgroundMusicFromUserGesture() {
+  const bgMusic = document.getElementById('bg-music');
+  if (!bgMusic) return;
+  bgMusic.pause();
+  bgMusic.currentTime = 0;
+  bgMusic.muted = true;
+  bgMusic.volume = 0;
+  const p = bgMusic.play();
+  if (p !== undefined) {
+    p.then(() => {
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
+      bgMusic.muted = false;
+      bgMusic.volume = 0.9;
+    }).catch(err => {
+      bgMusic.muted = false;
+      bgMusic.volume = 0.9;
+      console.warn('Music: فشل فتح مسار الصوت (تحقق من وجود الملف وصيغته MP3):', err);
+    });
+  } else {
+    bgMusic.muted = false;
+    bgMusic.volume = 0.9;
+  }
+}
+
 function scheduleBackgroundMusic() {
   if (bgMusicTimer) clearTimeout(bgMusicTimer);
   const bgMusic = document.getElementById('bg-music');
@@ -1254,10 +1284,12 @@ function scheduleBackgroundMusic() {
   bgMusicTimer = setTimeout(() => {
     bgMusicTimer = null;
     bgMusic.currentTime = 0;
+    bgMusic.muted = false;
     bgMusic.volume = 0.9;
-    bgMusic.play().catch(e => {
-      console.warn('تعذر تشغيل music.mpeg:', e);
-    });
+    const p = bgMusic.play();
+    if (p !== undefined) {
+      p.catch(e => console.warn('Music: تعذر التشغيل بعد التأخير:', e));
+    }
   }, delay);
 }
 
@@ -1292,6 +1324,8 @@ async function runSequence() {
 //  START / RESTART
 // ══════════════════════════════════════════
 function startExperience() {
+  primeBackgroundMusicFromUserGesture();
+
   startScreen.style.opacity = '0';
   startScreen.style.pointerEvents = 'none';
   setTimeout(() => { startScreen.style.display = 'none'; }, 1900);
@@ -1303,6 +1337,8 @@ function startExperience() {
 }
 
 function restartExperience() {
+  primeBackgroundMusicFromUserGesture();
+
   replayBtn.classList.remove('show');
   gradMessage.classList.remove('visible');
   document.querySelectorAll('#grad-eyebrow,#grad-congrats,#grad-dept,#grad-name').forEach(el => {
@@ -1347,6 +1383,13 @@ buildScene3();
 buildScene4();
 renderer.render(scene, camera);
 animate();
+
+const bgMusicEl = document.getElementById('bg-music');
+if (bgMusicEl) {
+  bgMusicEl.addEventListener('error', () => {
+    console.warn('Music: لم يُحمَّل الملف. ضع music.mpeg أو music.mp3 في نفس مجلد index.html، أو شغّل الموقع عبر خادم محلي (ليس file://).');
+  });
+}
 
 document.getElementById('start-btn').addEventListener('click', startExperience);
 replayBtn.addEventListener('click', restartExperience);

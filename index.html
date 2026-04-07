@@ -277,6 +277,33 @@
     50%     { box-shadow: 0 0 20px #00bfffbb; }
   }
 
+  /* Responsive dimensions for mobile landscape (wide width but short vertical height) */
+  @media screen and (orientation: landscape) and (max-width: 950px) {
+    /* Hide non-essential top/bottom decorations to maximize space */
+    .start-tagline, .start-year, .grad-eyebrow, .grad-line { display: none !important; }
+    
+    .start-title { font-size: 16vh; margin: 0; line-height: 1.1; }
+    .start-logo { font-size: 7vh; margin-bottom: 2vh; padding: 0; }
+    
+    #start-btn { padding: 2vh 6vh; font-size: 6vh; margin-bottom: 2vh; }
+    
+    /* Convert from fixed to relative so it stacks cleanly without overlapping */
+    #personalize { position: relative; bottom: auto; left: auto; transform: none; flex-direction: row; justify-content: center; margin-top: 1vh; }
+    #name-input-label { display: none; }
+    #name-input { width: 40vw; font-size: 6vh; padding: 1vh; text-align: center; }
+    
+    #grad-message { padding: 2vh; justify-content: center; }
+    .grad-congrats { font-size: 14vh; margin: 0; line-height: 1.2; }
+    .grad-dept { font-size: 7vh; line-height: 1.3; margin-top: 2vh; }
+    .grad-name { margin-top: 2vh; font-size: 10vh; }
+    
+    .corner { width: 10px; height: 10px; }
+    
+    #scene-hud { top: 2vh; font-size: 4vh; }
+    #replay-btn { bottom: 2vh; right: 2vh; padding: 1vh 2vh; font-size: 4vh; }
+    #social-credit { display: none !important; }
+  }
+
   /* Landscape prompt for mobile */
   #landscape-prompt {
     display: none;

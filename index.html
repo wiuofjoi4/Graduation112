@@ -408,6 +408,9 @@
   <div class="grad-name" id="grad-name"></div>
 </div>
 
+<!-- Background Music -->
+<audio id="bg-music" src="music.mp4" loop></audio>
+
 <button id="replay-btn">↩ REPLAY</button>
 
 <!-- Social Credit -->
@@ -1271,6 +1274,10 @@ function startExperience() {
   startScreen.style.pointerEvents = 'none';
   setTimeout(() => { startScreen.style.display = 'none'; }, 1900);
 
+  // Play background music and initialize Web Audio
+  const bgMusic = document.getElementById('bg-music');
+  if (bgMusic) bgMusic.play().catch(e => console.warn("Audio play prevented:", e));
+
   if (!audioCtx) initAudio();
   else if (audioCtx.state === 'suspended') audioCtx.resume();
 
@@ -1297,6 +1304,12 @@ function restartExperience() {
     try { n.osc?.stop(); n.src?.stop(); } catch(e) {}
   });
   playAmbient();
+
+  const bgMusic = document.getElementById('bg-music');
+  if (bgMusic) {
+    bgMusic.currentTime = 0;
+    bgMusic.play().catch(e => console.warn("Audio play prevented:", e));
+  }
 
   progressBar.style.transition = 'none';
   progressBar.style.width = '0';

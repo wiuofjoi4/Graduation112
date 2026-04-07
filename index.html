@@ -277,6 +277,27 @@
     50%     { box-shadow: 0 0 20px #00bfffbb; }
   }
 
+  /* Responsive dimensions for mobile landscape (short height) */
+  @media screen and (max-height: 500px) and (orientation: landscape) {
+    .start-title { font-size: clamp(2rem, 6vw, 3rem); margin: 0.2rem 0; }
+    .start-year { font-size: clamp(0.8rem, 2vw, 1.2rem); margin-bottom: 0.5rem; }
+    .start-logo { font-size: clamp(0.7rem, 2vw, 1rem); margin-bottom: 0.2rem; }
+    .start-tagline { margin-bottom: 0.2rem; }
+    #personalize { bottom: 0.8rem; }
+    #start-btn { padding: 0.6rem 2.5rem; font-size: 0.7rem; }
+    #grad-message { padding: 1rem; }
+    .grad-congrats { font-size: clamp(1.4rem, 4vw, 2.5rem); margin-bottom: 0.2rem; }
+    .grad-line { margin: 1rem auto; }
+    .grad-dept { font-size: clamp(0.7rem, 2vw, 1.1rem); line-height: 1.5; }
+    .grad-name { margin-top: 1rem; font-size: clamp(0.9rem, 2.5vw, 1.4rem); }
+    .grad-eyebrow { margin-bottom: 1rem; }
+    .corner { width: 25px; height: 25px; }
+    .corner-tl { top: 1rem; left: 1rem; } .corner-tr { top: 1rem; right: 1rem; }
+    .corner-bl { bottom: 1rem; left: 1rem; } .corner-br { bottom: 1rem; right: 1rem; }
+    #replay-btn { bottom: 1rem; right: 1rem; }
+    #social-credit { bottom: 1rem; left: 1rem; }
+  }
+
   /* Landscape prompt for mobile */
   #landscape-prompt {
     display: none;
@@ -414,16 +435,26 @@ function initThree() {
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const isMobile = innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent);
+  renderer.setPixelRatio(isMobile ? Math.min(devicePixelRatio, 1.25) : Math.min(devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
   container.appendChild(renderer.domElement);
 
   clock = new THREE.Clock();
   window.addEventListener('resize', () => {
-    camera.aspect = innerWidth / innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(innerWidth, innerHeight);
+    // Add small delay to handle mobile browser UI bar shifts after rotation
+    setTimeout(() => {
+      const aspect = window.innerWidth / window.innerHeight;
+      camera.aspect = aspect;
+      // Provide wider field of view for extreme landscape aspect ratios like 20:9 phones
+      camera.fov = aspect > 2.0 ? 60 : 70;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }, 150);
+  });
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
   });
 }
 
@@ -511,11 +542,12 @@ function makeParticles(count, spread, size, color, opacity) {
 // ══════════════════════════════════════════
 function buildScene1() {
   const group = new THREE.Group();
+  const isMobile = window.innerWidth < 768;
 
   // Stars (two layers)
   for (const [cnt, spread, sz, op] of [
-    [3500, 800, 0.45, 0.8],
-    [1000, 300, 0.25, 0.5],
+    [isMobile ? 1200 : 3500, 800, 0.45, 0.8],
+    [isMobile ? 400 : 1000, 300, 0.25, 0.5],
   ]) {
     const geo = new THREE.BufferGeometry();
     const pos = new Float32Array(cnt * 3);
@@ -531,7 +563,7 @@ function buildScene1() {
   }
 
   // Blue drift particles
-  const particles = makeParticles(1400, 100, 0.4, 0x00bfff, 0.7);
+  const particles = makeParticles(isMobile ? 500 : 1400, 100, 0.4, 0x00bfff, 0.7);
   group.add(particles);
 
   // Nebula clouds — animated shader planes
@@ -558,7 +590,8 @@ function buildScene1() {
       }
       float fbm(vec2 p) {
         float v = 0.0, a = 0.5;
-        for (int i=0;i<5;i++) { v += a*noise(p); p*=2.1; a*=0.5; }
+        // Reduced octaves for better mobile performance
+        for (int i=0;i<3;i++) { v += a*noise(p); p*=2.1; a*=0.5; }
         return v;
       }
 
@@ -639,7 +672,8 @@ function buildScene2() {
   group.visible = false;
 
   const fibers = [];
-  const FIBER_COUNT = 24;
+  const isMobile = window.innerWidth < 768;
+  const FIBER_COUNT = isMobile ? 12 : 24;
 
   // Shader for the CORE of each fiber — bright white-blue hotspot
   const coreMat = new THREE.ShaderMaterial({
@@ -686,7 +720,7 @@ function buildScene2() {
 
     // ── CLADDING: outer glass tube (semi-transparent, dark blue-grey)
     const tubeRadius = 0.055 + Math.random() * 0.025;
-    const claddingGeo = new THREE.TubeGeometry(curve, 100, tubeRadius, 8, false);
+    const claddingGeo = new THREE.TubeGeometry(curve, isMobile ? 50 : 100, tubeRadius, isMobile ? 5 : 8, false);
     const claddingMat = new THREE.MeshPhysicalMaterial({
       color: 0x0a1a33,
       emissive: 0x001144,
@@ -702,7 +736,7 @@ function buildScene2() {
 
     // ── CORE: inner bright tube (smaller radius, emissive white-blue)
     const coreRadius = tubeRadius * 0.35;
-    const coreGeo = new THREE.TubeGeometry(curve, 100, coreRadius, 6, false);
+    const coreGeo = new THREE.TubeGeometry(curve, isMobile ? 50 : 100, coreRadius, isMobile ? 4 : 6, false);
     const coreMeshMat = new THREE.MeshBasicMaterial({
       color: 0xffffff, transparent: true, opacity: 0.0,
       blending: THREE.AdditiveBlending, depthWrite: false
@@ -794,6 +828,7 @@ function buildScene3() {
   const group = new THREE.Group();
   group.visible = false;
 
+  const isMobile = window.innerWidth < 768;
   // ── Warp tunnel — cylindrical inner wall (like inside a fiber optic cable)
   const tunnelMat = new THREE.ShaderMaterial({
     uniforms: {
@@ -850,7 +885,7 @@ function buildScene3() {
   });
 
   const tunnel = new THREE.Mesh(
-    new THREE.CylinderGeometry(6, 6, 300, 64, 64, true),
+    new THREE.CylinderGeometry(6, 6, 300, isMobile ? 32 : 64, isMobile ? 32 : 64, true),
     tunnelMat
   );
   tunnel.rotation.x = Math.PI / 2;
@@ -858,7 +893,7 @@ function buildScene3() {
   group.add(tunnel);
 
   // ── Radial streaks (star-field warp effect)
-  const STREAK_COUNT = 800;
+  const STREAK_COUNT = isMobile ? 300 : 800;
   const sGeo = new THREE.BufferGeometry();
   const sPos = new Float32Array(STREAK_COUNT * 6);
   const sData = [];
@@ -881,7 +916,8 @@ function buildScene3() {
 
   // Add concentric rings for depth
   const warpRings = [];
-  for (let i = 0; i < 30; i++) {
+  const ringCount = isMobile ? 15 : 30;
+  for (let i = 0; i < ringCount; i++) {
     const r = new THREE.Mesh(
       new THREE.TorusGeometry(3 + i * 0.2, 0.04, 6, 64),
       new THREE.MeshBasicMaterial({
@@ -984,8 +1020,10 @@ function buildScene4() {
   bgGlow.position.z = -30;
   group.add(bgGlow);
 
+  const isMobile = window.innerWidth < 768;
+
   // Floating particles (calm)
-  const particles = makeParticles(2000, 80, 0.22, 0x0055ff, 0.35);
+  const particles = makeParticles(isMobile ? 800 : 2000, 80, 0.22, 0x0055ff, 0.35);
   group.add(particles);
 
   // Horizontal light rule lines
@@ -1000,7 +1038,7 @@ function buildScene4() {
   }
 
   // Orbiting particle ring (decorative)
-  const RING_COUNT = 400;
+  const RING_COUNT = isMobile ? 150 : 400;
   const rGeo = new THREE.BufferGeometry();
   const rPos = new Float32Array(RING_COUNT * 3);
   for (let i = 0; i < RING_COUNT; i++) {

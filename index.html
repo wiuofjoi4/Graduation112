@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graduation — Computer Science Network Systems</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; font-family: 'Orbitron', sans-serif; }
+  #canvas-container { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  /* Start screen */
+  #start-screen {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 50% 60%, #00091a 0%, #000 70%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 100;
+    transition: opacity 1.8s ease;
+  }
+  .start-tagline {
+    font-size: clamp(0.65rem, 1.8vw, 0.85rem);
+    color: #00bfff99;
+    letter-spacing: 0.55em;
+    text-transform: uppercase;
+    opacity: 0; animation: fadeUp 1s 0.4s forwards;
+    margin-bottom: 0.6rem;
+  }
+  .start-logo {
+    font-size: clamp(0.9rem, 2.5vw, 1.25rem);
+    color: #00bfff;
+    text-transform: uppercase;
+    letter-spacing: 0.45em;
+    opacity: 0; animation: fadeUp 1s 0.9s forwards;
+    text-align: center; padding: 0 2rem;
+    text-shadow: 0 0 30px #00bfff88;
+  }
+  .start-title {
+    font-size: clamp(2.4rem, 7vw, 5rem);
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin: 0.8rem 0 0.2rem;
+    opacity: 0; animation: fadeUp 1s 1.3s forwards;
+    text-align: center; padding: 0 1rem;
+    text-shadow: 0 0 60px #00bfff44;
+  }
+  .start-year {
+    font-size: clamp(1rem, 3vw, 1.8rem);
+    color: #0088cc;
+    letter-spacing: 0.6em;
+    opacity: 0; animation: fadeUp 1s 1.7s forwards;
+    margin-bottom: 3rem;
+  }
+
+  #start-btn {
+    padding: 1rem 3.5rem;
+    border: 1px solid #00bfff;
+    background: transparent;
+    color: #00bfff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.35em;
+    cursor: pointer;
+    pointer-events: all;
+    opacity: 0; animation: fadeUp 1s 2.2s forwards;
+    position: relative; overflow: hidden;
+    transition: color 0.3s, box-shadow 0.3s, background 0.3s;
+  }
+  #start-btn:hover {
+    background: #00bfff11;
+    color: #fff;
+    box-shadow: 0 0 30px #00bfff44, inset 0 0 20px #00bfff11;
+  }
+  #start-btn::before {
+    content: '';
+    position: absolute; left: -100%; top: 0; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, #00bfff22, transparent);
+    animation: scanBtn 2.5s 2.5s infinite;
+  }
+
+  /* Decorative corner brackets on start screen */
+  .corner {
+    position: absolute;
+    width: 40px; height: 40px;
+    border-color: #00bfff44;
+    border-style: solid;
+    opacity: 0; animation: fadeUp 1s 0.6s forwards;
+  }
+  .corner-tl { top: 2rem; left: 2rem; border-width: 1px 0 0 1px; }
+  .corner-tr { top: 2rem; right: 2rem; border-width: 1px 1px 0 0; }
+  .corner-bl { bottom: 2rem; left: 2rem; border-width: 0 0 1px 1px; }
+  .corner-br { bottom: 2rem; right: 2rem; border-width: 0 1px 1px 0; }
+
+  /* Personalize */
+  #personalize {
+    position: fixed; bottom: 3rem; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 0.8rem; align-items: center;
+    z-index: 110; opacity: 0;
+    animation: fadeUp 1s 2.8s forwards;
+  }
+  #name-input {
+    background: transparent;
+    border: 0; border-bottom: 1px solid #00bfff44;
+    color: #00bfff;
+    padding: 0.4rem 0.8rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    outline: none; width: 220px;
+    transition: border-color 0.3s;
+  }
+  #name-input::placeholder { color: #00bfff33; }
+  #name-input:focus { border-color: #00bfff88; }
+  #name-input-label {
+    font-size: 0.6rem; color: #00bfff55;
+    letter-spacing: 0.3em; text-transform: uppercase;
+  }
+
+  /* HUD */
+  #scene-hud {
+    position: fixed; top: 1.8rem; left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem; letter-spacing: 0.5em;
+    color: #00bfff66; text-transform: uppercase;
+    opacity: 0; transition: opacity 1.2s;
+    z-index: 20;
+  }
+  #progress-bar {
+    position: fixed; bottom: 0; left: 0;
+    height: 1px; width: 0;
+    background: linear-gradient(90deg, #0044ff, #00bfff);
+    z-index: 20;
+    transition: width 0.5s linear;
+    box-shadow: 0 0 8px #00bfff;
+  }
+
+  /* Graduation message */
+  #grad-message {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; z-index: 30;
+    transition: opacity 2.5s ease;
+    padding: 3rem 2rem;
+    background: radial-gradient(ellipse at 50% 50%, #000d2444 0%, transparent 70%);
+  }
+  #grad-message.visible { opacity: 1; }
+
+  .grad-eyebrow {
+    font-size: clamp(0.6rem, 1.5vw, 0.75rem);
+    color: #00bfff77;
+    letter-spacing: 0.7em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    opacity: 0;
+  }
+  .grad-congrats {
+    font-size: clamp(1.8rem, 5.5vw, 4rem);
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    text-align: center;
+    line-height: 1.15;
+    margin-bottom: 0.5rem;
+    text-shadow:
+      0 0 20px #fff,
+      0 0 40px #00bfff,
+      0 0 80px #0044ff88;
+    opacity: 0;
+  }
+  .grad-line {
+    width: 0; height: 1px; margin: 2.2rem auto;
+    background: linear-gradient(90deg, transparent, #00bfff, #fff, #00bfff, transparent);
+    transition: width 2.5s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 10px #00bfff;
+  }
+  .grad-line.expand { width: min(560px, 85vw); }
+  .grad-dept {
+    font-size: clamp(0.85rem, 2.8vw, 1.5rem);
+    color: #00bfff;
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    text-align: center;
+    line-height: 2;
+    text-shadow: 0 0 20px #00bfff88;
+    opacity: 0;
+  }
+  .grad-name {
+    font-size: clamp(1.1rem, 3vw, 1.8rem);
+    color: #7fffff;
+    letter-spacing: 0.3em;
+    text-align: center;
+    margin-top: 2.5rem;
+    text-shadow: 0 0 30px #00ffff88;
+    opacity: 0;
+  }
+  .grad-name:empty { display: none; }
+
+  /* Flash */
+  #flash {
+    position: fixed; inset: 0;
+    background: #fff;
+    opacity: 0; pointer-events: none; z-index: 50;
+    transition: opacity 0.1s;
+  }
+
+  /* Scanline / vignette */
+  #scanline {
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,191,255,0.012) 2px, rgba(0,191,255,0.012) 4px
+    );
+    pointer-events: none; z-index: 5;
+  }
+  #vignette {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 45%, #000 100%);
+    pointer-events: none; z-index: 6;
+  }
+
+  /* Social credit */
+  #social-credit {
+    position: fixed; bottom: 1.5rem; left: 1.8rem;
+    font-size: 0.6rem;
+    color: #0077cc;
+    letter-spacing: 0.18em;
+    line-height: 1.9;
+    text-align: right;
+    z-index: 200;
+    pointer-events: none;
+    font-family: 'Orbitron', sans-serif;
+    text-shadow: 0 0 10px #0055aa44;
+  }
+
+  /* Replay */
+  #replay-btn {
+    position: fixed; bottom: 2rem; right: 2rem;
+    padding: 0.6rem 1.5rem;
+    border: 1px solid #00bfff33;
+    background: transparent;
+    color: #00bfff66;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem; letter-spacing: 0.3em;
+    cursor: pointer; z-index: 200;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.6s, color 0.3s, border-color 0.3s;
+  }
+  #replay-btn.show { opacity: 1; pointer-events: all; }
+  #replay-btn:hover { color: #00bfff; border-color: #00bfff; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scanBtn {
+    from { left: -100%; } to { left: 200%; }
+  }
+  @keyframes floatUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes textGlow {
+    0%,100% { text-shadow: 0 0 20px #fff, 0 0 40px #00bfff, 0 0 80px #0044ff88; }
+    50%     { text-shadow: 0 0 30px #fff, 0 0 60px #00bfff, 0 0 120px #0044ffcc, 0 0 4px #aad8ff; }
+  }
+  @keyframes gradPulse {
+    0%,100% { opacity: 0.85; } 50% { opacity: 1; }
+  }
+  @keyframes lineGlow {
+    0%,100% { box-shadow: 0 0 8px #00bfff44; }
+    50%     { box-shadow: 0 0 20px #00bfffbb; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="scanline"></div>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="progress-bar"></div>
+
+<div id="canvas-container"></div>
+
+<!-- Start Screen -->
+<div id="start-screen">
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+  <p class="start-tagline">A Journey Through Light</p>
+  <p class="start-logo">Computer Science · Network Systems</p>
+  <h1 class="start-title">Graduation</h1>
+  <p class="start-year">2026</p>
+  <button id="start-btn">ENTER EXPERIENCE</button>
+  <div id="personalize">
+    <span id="name-input-label">Graduate Name:</span>
+    <input id="name-input" type="text" placeholder="Optional — e.g. Ahmed Ali" maxlength="40">
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="scene-hud">◈ DEEP SPACE · SECTOR 7</div>
+
+<!-- Graduation Message -->
+<div id="grad-message">
+  <div class="grad-eyebrow" id="grad-eyebrow">CLASS OF 2026</div>
+  <h1 class="grad-congrats" id="grad-congrats">Congratulations<br>on Your Graduation</h1>
+  <div class="grad-line" id="grad-line"></div>
+  <div class="grad-dept" id="grad-dept">Computer Science<br>Network Systems Department</div>
+  <div class="grad-name" id="grad-name"></div>
+</div>
+
+<button id="replay-btn">↩ REPLAY</button>
+
+<!-- Social Credit -->
+<div id="social-credit">
+  Instagram & Telegram&nbsp;&nbsp;@a0_a231<br>
+  Instagram & Telegram&nbsp;&nbsp;&nbsp;@K1_LL0
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ══════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════
+const CONFIG = {
+  sceneDurations: {
+    space: 7000,
+    fiber: 9000,
+    warp:  7000,
+    flash: 1800,
+  }
+};
+
+// ══════════════════════════════════════════
+//  GLOBALS
+// ══════════════════════════════════════════
+let scene, camera, renderer, clock;
+let sceneObjects = {};
+let currentScene = 0;
+let sceneTime = 0;
+let running = false;
+let audioCtx = null, gainNode = null, ambientNodes = [];
+
+const container    = document.getElementById('canvas-container');
+const startScreen  = document.getElementById('start-screen');
+const sceneHud     = document.getElementById('scene-hud');
+const gradMessage  = document.getElementById('grad-message');
+const flashEl      = document.getElementById('flash');
+const progressBar  = document.getElementById('progress-bar');
+const replayBtn    = document.getElementById('replay-btn');
+const nameInput    = document.getElementById('name-input');
+const gradNameEl   = document.getElementById('grad-name');
+
+// ══════════════════════════════════════════
+//  THREE INIT
+// ══════════════════════════════════════════
+function initThree() {
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000007, 0.012);
+
+  camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.01, 3000);
+  camera.position.set(0, 0, 0);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  container.appendChild(renderer.domElement);
+
+  clock = new THREE.Clock();
+  window.addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+}
+
+// ══════════════════════════════════════════
+//  AUDIO
+// ══════════════════════════════════════════
+function initAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  gainNode = audioCtx.createGain();
+  gainNode.gain.value = 0;
+  gainNode.connect(audioCtx.destination);
+  playAmbient();
+}
+function makeOsc(freq, type, gv, detune = 0) {
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq; o.detune.value = detune;
+  g.gain.value = gv;
+  o.connect(g); g.connect(gainNode); o.start();
+  return { osc: o, gain: g };
+}
+function makeNoise(gv) {
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 4, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const f = audioCtx.createBiquadFilter();
+  f.type = 'lowpass'; f.frequency.value = 180;
+  const g = audioCtx.createGain(); g.gain.value = gv;
+  src.connect(f); f.connect(g); g.connect(gainNode); src.start();
+  return { src, filter: f, gain: g };
+}
+function playAmbient() {
+  ambientNodes = [
+    makeOsc(38, 'sine', 0.35),
+    makeOsc(52, 'sine', 0.18, 6),
+    makeOsc(76, 'triangle', 0.12),
+    makeOsc(110, 'sine', 0.06, -3),
+    makeNoise(0.045),
+  ];
+  gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(0.42, audioCtx.currentTime + 3.5);
+}
+function rampToWarp() {
+  gainNode.gain.linearRampToValueAtTime(0.85, audioCtx.currentTime + 2);
+  ambientNodes.forEach(n => {
+    if (n.osc) n.osc.frequency.linearRampToValueAtTime(n.osc.frequency.value * 2.2, audioCtx.currentTime + 2.5);
+    if (n.filter) n.filter.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 2.5);
+  });
+}
+function rampToCalm() {
+  gainNode.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 5);
+  ambientNodes.forEach(n => {
+    if (n.osc) n.osc.frequency.linearRampToValueAtTime(n.osc.frequency.value * 0.45, audioCtx.currentTime + 5);
+    if (n.filter) n.filter.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 5);
+  });
+}
+
+// ══════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════
+function makeParticles(count, spread, size, color, opacity) {
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  const vel = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * spread;
+    pos[i*3+1] = (Math.random() - 0.5) * spread;
+    pos[i*3+2] = (Math.random() - 0.5) * spread * 1.5;
+    vel[i*3]   = (Math.random() - 0.5) * 0.008;
+    vel[i*3+1] = (Math.random() - 0.5) * 0.008;
+    vel[i*3+2] = (Math.random() - 0.5) * 0.005;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('velocity', new THREE.BufferAttribute(vel, 3));
+  return new THREE.Points(geo, new THREE.PointsMaterial({
+    color, size, transparent: true, opacity,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+}
+
+// ══════════════════════════════════════════
+//  SCENE 1 — DEEP SPACE + NEBULA
+// ══════════════════════════════════════════
+function buildScene1() {
+  const group = new THREE.Group();
+
+  // Stars (two layers)
+  for (const [cnt, spread, sz, op] of [
+    [3500, 800, 0.45, 0.8],
+    [1000, 300, 0.25, 0.5],
+  ]) {
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(cnt * 3);
+    for (let i = 0; i < cnt * 3; i += 3) {
+      pos[i]   = (Math.random() - 0.5) * spread;
+      pos[i+1] = (Math.random() - 0.5) * spread;
+      pos[i+2] = Math.random() * -spread - 20;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    group.add(new THREE.Points(geo, new THREE.PointsMaterial({
+      color: 0xc8e8ff, size: sz, transparent: true, opacity: op
+    })));
+  }
+
+  // Blue drift particles
+  const particles = makeParticles(1400, 100, 0.4, 0x00bfff, 0.7);
+  group.add(particles);
+
+  // Nebula clouds — animated shader planes
+  const nebulaMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime:  { value: 0 },
+      uColor1: { value: new THREE.Color(0x001155) },
+      uColor2: { value: new THREE.Color(0x003399) },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uColor1, uColor2;
+      varying vec2 vUv;
+
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float noise(vec2 p) {
+        vec2 i = floor(p); vec2 f = fract(p); f = f*f*(3.0-2.0*f);
+        return mix(mix(hash(i), hash(i+vec2(1,0)), f.x),
+                   mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y);
+      }
+      float fbm(vec2 p) {
+        float v = 0.0, a = 0.5;
+        for (int i=0;i<5;i++) { v += a*noise(p); p*=2.1; a*=0.5; }
+        return v;
+      }
+
+      void main() {
+        vec2 uv = vUv - 0.5;
+        float n = fbm(uv * 3.0 + uTime * 0.04);
+        float n2 = fbm(uv * 5.0 - uTime * 0.025 + 1.3);
+        float cloud = n * n2 * 2.5;
+        float edge = 1.0 - smoothstep(0.2, 0.8, length(uv) * 1.8);
+        float alpha = cloud * edge * 0.18;
+        vec3 col = mix(uColor1, uColor2, n);
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+  });
+
+  const nebulaPlanes = [];
+  for (let i = 0; i < 6; i++) {
+    const mat = nebulaMat.clone();
+    mat.uniforms.uTime = { value: 0 };
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(180, 120, 1, 1), mat);
+    mesh.position.set((Math.random()-0.5)*30, (Math.random()-0.5)*20, -80 - i * 35);
+    mesh.rotation.z = Math.random() * Math.PI;
+    group.add(mesh); nebulaPlanes.push(mesh);
+  }
+
+  // Energy ripple rings
+  const rings = [];
+  for (let i = 0; i < 5; i++) {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(18 + i*5, 0.04, 6, 128),
+      new THREE.MeshBasicMaterial({ color: 0x0044cc, transparent: true, opacity: 0.25 - i*0.03 })
+    );
+    ring.position.z = -60 - i * 20;
+    ring.rotation.x = Math.PI * 0.5;
+    group.add(ring); rings.push(ring);
+  }
+
+  scene.add(group);
+  sceneObjects.s1 = { group, particles, nebulaPlanes, rings };
+}
+
+function updateScene1(dt, t) {
+  const { particles, nebulaPlanes, rings } = sceneObjects.s1;
+
+  nebulaPlanes.forEach(m => { m.material.uniforms.uTime.value = t; });
+
+  const pos = particles.geometry.attributes.position;
+  const vel = particles.geometry.attributes.velocity;
+  for (let i = 0; i < pos.count; i++) {
+    pos.array[i*3]   += vel.array[i*3];
+    pos.array[i*3+1] += vel.array[i*3+1];
+    pos.array[i*3+2] += vel.array[i*3+2];
+    if (Math.abs(pos.array[i*3])   > 50) vel.array[i*3]   *= -1;
+    if (Math.abs(pos.array[i*3+1]) > 50) vel.array[i*3+1] *= -1;
+    if (Math.abs(pos.array[i*3+2]) > 50) vel.array[i*3+2] *= -1;
+  }
+  pos.needsUpdate = true;
+
+  rings.forEach((r, i) => {
+    r.rotation.z += dt * (0.04 + i * 0.008);
+    r.material.opacity = (0.25 - i*0.03) * (0.6 + 0.4 * Math.sin(t * 0.5 + i));
+  });
+
+  camera.position.x = Math.sin(t * 0.08) * 2.5;
+  camera.position.y = Math.cos(t * 0.06) * 1.2;
+  camera.position.z = Math.sin(t * 0.04) * 1;
+  camera.lookAt(0, 0, -60);
+}
+
+// ══════════════════════════════════════════
+//  SCENE 2 — REALISTIC FIBER OPTIC FORMATION
+//  Inspired by: real fiber cross-section = cladding (outer glass) + bright core
+// ══════════════════════════════════════════
+function buildScene2() {
+  const group = new THREE.Group();
+  group.visible = false;
+
+  const fibers = [];
+  const FIBER_COUNT = 24;
+
+  // Shader for the CORE of each fiber — bright white-blue hotspot
+  const coreMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 }, uPulse: { value: 0 } },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+    `,
+    fragmentShader: `
+      uniform float uTime, uPulse;
+      varying vec2 vUv;
+      void main() {
+        // Radial cross-section: very bright centre
+        float r = length(vUv * 2.0 - 1.0);
+        float core = 1.0 - smoothstep(0.0, 0.6, r);
+        float halo = (1.0 - smoothstep(0.5, 1.0, r)) * 0.4;
+        float pulse = 0.7 + 0.3 * sin(vUv.x * 30.0 - uTime * 8.0 + uPulse);
+        vec3 col = mix(vec3(0.6, 0.9, 1.0), vec3(1.0, 1.0, 1.0), core * pulse);
+        float alpha = (core * pulse + halo) * 0.9;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+  });
+
+  for (let i = 0; i < FIBER_COUNT; i++) {
+    const angle = (i / FIBER_COUNT) * Math.PI * 2;
+    const layer = i < 8 ? 0 : (i < 16 ? 1 : 2); // inner / mid / outer ring
+    const baseR = [2.0, 3.8, 5.5][layer];
+    const radius = baseR + (Math.random() - 0.5) * 0.8;
+    const length = 90 + Math.random() * 50;
+
+    // Fiber path with gentle helix twist
+    const pts = [];
+    for (let j = 0; j <= 120; j++) {
+      const t2 = j / 120;
+      const twist = 0.15;
+      const x = Math.cos(angle + t2 * twist * Math.PI * 2) * radius * (1.0 - t2 * 0.15);
+      const y = Math.sin(angle + t2 * twist * Math.PI * 2) * radius * (1.0 - t2 * 0.15);
+      const z = -t2 * length + 6;
+      pts.push(new THREE.Vector3(x, y, z));
+    }
+    const curve = new THREE.CatmullRomCurve3(pts);
+
+    // ── CLADDING: outer glass tube (semi-transparent, dark blue-grey)
+    const tubeRadius = 0.055 + Math.random() * 0.025;
+    const claddingGeo = new THREE.TubeGeometry(curve, 100, tubeRadius, 8, false);
+    const claddingMat = new THREE.MeshPhysicalMaterial({
+      color: 0x0a1a33,
+      emissive: 0x001144,
+      emissiveIntensity: 0.4,
+      transparent: true, opacity: 0.0,
+      roughness: 0.05,
+      metalness: 0.1,
+      transmission: 0.6,
+      ior: 1.46,
+    });
+    const claddingMesh = new THREE.Mesh(claddingGeo, claddingMat);
+    group.add(claddingMesh);
+
+    // ── CORE: inner bright tube (smaller radius, emissive white-blue)
+    const coreRadius = tubeRadius * 0.35;
+    const coreGeo = new THREE.TubeGeometry(curve, 100, coreRadius, 6, false);
+    const coreMeshMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0.0,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const coreMesh = new THREE.Mesh(coreGeo, coreMeshMat);
+    group.add(coreMesh);
+
+    // ── PULSE: moving bright segment along fiber (the actual light packet)
+    const pulseSeg = 8; // segments of the tube for the pulse
+    const pulseGeo = new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3(pts.slice(0, pulseSeg + 1)), pulseSeg, coreRadius * 2.5, 6, false
+    );
+    const pulseMesh = new THREE.Mesh(pulseGeo, new THREE.MeshBasicMaterial({
+      color: 0xaaeeff, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    group.add(pulseMesh);
+
+    // ── Glow billboard along path (every ~20 units)
+    fibers.push({
+      claddingMesh, coreMesh, pulseMesh, curve, pts,
+      delay: (layer * 1.0) + Math.random() * 2.0, // inner ring appears first
+      pulseOffset: Math.random() * Math.PI * 2,
+      pulseSpeed: 0.35 + Math.random() * 0.25,
+      length,
+    });
+  }
+
+  // Scene key light — cool blue
+  const keyLight = new THREE.PointLight(0x0033ff, 4, 25);
+  keyLight.position.set(0, 0, -3);
+  group.add(keyLight);
+
+  const fillLight = new THREE.PointLight(0x00bfff, 2, 18);
+  fillLight.position.set(4, 3, -8);
+  group.add(fillLight);
+
+  // Subtle ambient
+  group.add(new THREE.AmbientLight(0x000a22, 3));
+
+  scene.add(group);
+  sceneObjects.s2 = { group, fibers, keyLight };
+}
+
+function updateScene2(dt, t, st) {
+  const { fibers, keyLight } = sceneObjects.s2;
+
+  fibers.forEach(f => {
+    const reveal = Math.max(0, Math.min(1, (st - f.delay * 0.6) / 3.0));
+
+    // Fade in cladding
+    f.claddingMesh.material.opacity = reveal * 0.72;
+    f.claddingMesh.material.emissiveIntensity = 0.3 + Math.sin(t * 1.2 + f.pulseOffset) * 0.25;
+
+    // Core steady glow
+    f.coreMesh.material.opacity = reveal * 0.85;
+
+    // Moving pulse
+    if (reveal > 0.2) {
+      const pulseT = ((t * f.pulseSpeed + f.pulseOffset * 0.5) % 1);
+      const startIdx = Math.floor(pulseT * (f.pts.length - 10));
+      const endIdx   = Math.min(startIdx + 10, f.pts.length - 1);
+
+      const pulsePts = f.pts.slice(startIdx, endIdx + 1);
+      if (pulsePts.length >= 2) {
+        // Reposition pulse along curve
+        const p = f.curve.getPoint(pulseT);
+        f.pulseMesh.position.set(p.x - f.pts[0].x, p.y - f.pts[0].y, p.z - f.pts[0].z);
+        f.pulseMesh.material.opacity = reveal * (0.7 + 0.3 * Math.sin(t * 5 + f.pulseOffset));
+      }
+    }
+  });
+
+  keyLight.intensity = 3 + Math.sin(t * 2.5) * 2;
+
+  // Camera glides forward, slight drift
+  const targetZ = Math.max(-10, -st * 1.0);
+  camera.position.z += (targetZ - camera.position.z) * 0.05;
+  camera.position.x = Math.sin(t * 0.18) * 0.6;
+  camera.position.y = Math.cos(t * 0.12) * 0.35;
+  camera.lookAt(0, 0, camera.position.z - 25);
+}
+
+// ══════════════════════════════════════════
+//  SCENE 3 — WARP / WORMHOLE (inside the fiber!)
+//  The camera is now INSIDE a giant fiber — pure cinematic warp.
+// ══════════════════════════════════════════
+function buildScene3() {
+  const group = new THREE.Group();
+  group.visible = false;
+
+  // ── Warp tunnel — cylindrical inner wall (like inside a fiber optic cable)
+  const tunnelMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uSpeed: { value: 0 },
+    },
+    side: THREE.BackSide,
+    vertexShader: `
+      varying vec2 vUv;
+      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+    `,
+    fragmentShader: `
+      uniform float uTime, uSpeed;
+      varying vec2 vUv;
+
+      float hash(float n) { return fract(sin(n) * 1e4); }
+      float noise(float t) { float i=floor(t); float f=fract(t); return mix(hash(i),hash(i+1.0),f*f*(3.0-2.0*f)); }
+
+      void main() {
+        // vUv.x = along tube (0 to 1), vUv.y = around circumference
+        float angle = vUv.y * 6.2832;
+        float depth = vUv.x;
+
+        // Moving light streaks along the tube
+        float streak = 0.0;
+        for (int k = 0; k < 12; k++) {
+          float offset = float(k) * 0.083;
+          float sp = 0.8 + float(k) * 0.15;
+          float streakT = fract(depth * 8.0 - uTime * sp * (1.0 + uSpeed * 0.5) + offset);
+          float w = 0.03 + float(k) * 0.002;
+          streak += smoothstep(w, 0.0, abs(streakT - 0.5)) * (0.4 + float(k) * 0.05);
+        }
+
+        // Swirl rings
+        float ring = sin(depth * 80.0 - uTime * 6.0 * (1.0 + uSpeed)) * 0.5 + 0.5;
+        ring = pow(ring, 12.0) * 0.3;
+
+        // Angular glow (concentration at 12 spots)
+        float angGlow = pow(max(0.0, sin(angle * 6.0 + uTime * 0.5)), 3.0) * 0.15;
+
+        // Colour: centre of tunnel bright white-blue, edges deep blue
+        float brightness = streak + ring + angGlow;
+        vec3 col = mix(vec3(0.0, 0.04, 0.15), vec3(0.3, 0.8, 1.0), brightness);
+        col += vec3(0.1, 0.3, 1.0) * ring;
+
+        // Fade near edges (vignette along circumference)
+        float edgeFade = 1.0 - pow(abs(vUv.y * 2.0 - 1.0), 3.0);
+        float alpha = (brightness * 0.9 + 0.05) * edgeFade;
+
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+  });
+
+  const tunnel = new THREE.Mesh(
+    new THREE.CylinderGeometry(6, 6, 300, 64, 64, true),
+    tunnelMat
+  );
+  tunnel.rotation.x = Math.PI / 2;
+  tunnel.position.z = -150;
+  group.add(tunnel);
+
+  // ── Radial streaks (star-field warp effect)
+  const STREAK_COUNT = 800;
+  const sGeo = new THREE.BufferGeometry();
+  const sPos = new Float32Array(STREAK_COUNT * 6);
+  const sData = [];
+  for (let i = 0; i < STREAK_COUNT; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const r   = 0.3 + Math.random() * 5.5;
+    const x = Math.cos(angle) * r, y = Math.sin(angle) * r;
+    const z = -(Math.random() * 200);
+    const len = 0.8 + Math.random() * 6;
+    sPos[i*6]=x; sPos[i*6+1]=y; sPos[i*6+2]=z;
+    sPos[i*6+3]=x; sPos[i*6+4]=y; sPos[i*6+5]=z-len;
+    sData.push({ x, y, z, len, speed: 4 + Math.random() * 8 });
+  }
+  sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+  const streaks = new THREE.LineSegments(sGeo, new THREE.LineBasicMaterial({
+    color: 0x55ddff, transparent: true, opacity: 0.55,
+    blending: THREE.AdditiveBlending, depthWrite: false, vertexColors: false
+  }));
+  group.add(streaks);
+
+  // Add concentric rings for depth
+  const warpRings = [];
+  for (let i = 0; i < 30; i++) {
+    const r = new THREE.Mesh(
+      new THREE.TorusGeometry(3 + i * 0.2, 0.04, 6, 64),
+      new THREE.MeshBasicMaterial({
+        color: i % 4 === 0 ? 0xffffff : (i % 2 === 0 ? 0x00bfff : 0x0044ff),
+        transparent: true, opacity: 0.25,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      })
+    );
+    r.rotation.x = Math.PI / 2;
+    r.position.z = -(i * 7);
+    group.add(r); warpRings.push(r);
+  }
+
+  // Glow flare at the end
+  const flare = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
+  );
+  flare.position.z = -200;
+  group.add(flare);
+
+  scene.add(group);
+  sceneObjects.s3 = { group, tunnel, tunnelMat, streaks, sGeo, sData, warpRings, flare };
+}
+
+function updateScene3(dt, t, st) {
+  const { tunnelMat, sGeo, sData, warpRings, flare } = sceneObjects.s3;
+  const totalSec = CONFIG.sceneDurations.warp / 1000;
+  const progress = Math.min(1, st / totalSec);
+  const speed = 1.5 + progress * 10;
+
+  tunnelMat.uniforms.uTime.value = t;
+  tunnelMat.uniforms.uSpeed.value = progress;
+
+  // Rush streaks
+  const pos = sGeo.attributes.position;
+  sData.forEach((s, i) => {
+    s.z += speed * dt * 1.8;
+    if (s.z > 5) s.z = -200 - Math.random() * 60;
+    const stretch = 1 + speed * 1.2;
+    pos.array[i*6+2] = s.z;
+    pos.array[i*6+5] = s.z - s.len * stretch;
+    pos.array[i*6] = s.x; pos.array[i*6+1] = s.y;
+    pos.array[i*6+3] = s.x; pos.array[i*6+4] = s.y;
+  });
+  pos.needsUpdate = true;
+
+  // Rings converge
+  warpRings.forEach((r, i) => {
+    r.position.z += speed * dt * 2;
+    if (r.position.z > 5) r.position.z -= 210;
+    r.rotation.z += dt * (0.4 + i * 0.02) * (1 + progress);
+    r.material.opacity = 0.15 + 0.35 * (1 - progress * 0.4);
+  });
+
+  // Camera hurtles forward + slight shake
+  const shake = progress * 0.08;
+  camera.position.z = -progress * 50;
+  camera.position.x = Math.sin(t * 1.2) * shake;
+  camera.position.y = Math.cos(t * 0.9) * shake * 0.7;
+  camera.rotation.z = Math.sin(t * 0.7) * shake * 0.3;
+  camera.lookAt(0, 0, camera.position.z - 15);
+
+  // Flare grows near end
+  flare.material.opacity = Math.max(0, (progress - 0.75) * 4);
+  const fScale = 1 + progress * 8;
+  flare.scale.set(fScale, fScale, fScale);
+
+  // Streak opacity
+  sceneObjects.s3.streaks.material.opacity = 0.3 + progress * 0.6;
+}
+
+// ══════════════════════════════════════════
+//  SCENE 4 — FINAL / TEXT
+// ══════════════════════════════════════════
+function buildScene4() {
+  const group = new THREE.Group();
+  group.visible = false;
+
+  // Deep background glow (like a nebula behind text)
+  const bgGlow = new THREE.Mesh(
+    new THREE.PlaneGeometry(300, 200),
+    new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 } },
+      vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+      fragmentShader: `
+        uniform float uTime;
+        varying vec2 vUv;
+        void main(){
+          vec2 uv = vUv - 0.5;
+          float r = length(uv);
+          float glow = exp(-r * 4.0) * (0.5 + 0.1 * sin(uTime * 0.3));
+          vec3 col = mix(vec3(0.0,0.02,0.1), vec3(0.0,0.2,0.5), glow * 2.0);
+          gl_FragColor = vec4(col, glow * 0.6);
+        }
+      `,
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+    })
+  );
+  bgGlow.position.z = -30;
+  group.add(bgGlow);
+
+  // Floating particles (calm)
+  const particles = makeParticles(2000, 80, 0.22, 0x0055ff, 0.35);
+  group.add(particles);
+
+  // Horizontal light rule lines
+  const beamMat = new THREE.MeshBasicMaterial({
+    color: 0x0066cc, transparent: true, opacity: 0.1,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  for (let i = -6; i <= 6; i++) {
+    const b = new THREE.Mesh(new THREE.PlaneGeometry(200, 0.04), beamMat.clone());
+    b.position.set(0, i * 2.2, -28);
+    group.add(b);
+  }
+
+  // Orbiting particle ring (decorative)
+  const RING_COUNT = 400;
+  const rGeo = new THREE.BufferGeometry();
+  const rPos = new Float32Array(RING_COUNT * 3);
+  for (let i = 0; i < RING_COUNT; i++) {
+    const a = (i / RING_COUNT) * Math.PI * 2;
+    const r2 = 18 + Math.sin(i * 0.7) * 2;
+    rPos[i*3]   = Math.cos(a) * r2;
+    rPos[i*3+1] = Math.sin(a) * r2;
+    rPos[i*3+2] = -28;
+  }
+  rGeo.setAttribute('position', new THREE.BufferAttribute(rPos, 3));
+  const ringPts = new THREE.Points(rGeo, new THREE.PointsMaterial({
+    color: 0x00bfff, size: 0.25, transparent: true, opacity: 0,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+  group.add(ringPts);
+
+  // Fibers converging to center (echo of Scene 2)
+  const echoFibers = [];
+  for (let i = 0; i < 10; i++) {
+    const angle = (i / 10) * Math.PI * 2;
+    const pts = [];
+    for (let j = 0; j <= 20; j++) {
+      const tF = j / 20;
+      pts.push(new THREE.Vector3(
+        Math.cos(angle) * 20 * (1 - tF * 0.95),
+        Math.sin(angle) * 12 * (1 - tF * 0.95),
+        -28 + tF * 5
+      ));
+    }
+    const m = new THREE.Mesh(
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 20, 0.03, 6, false),
+      new THREE.MeshBasicMaterial({ color: 0x0044ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
+    );
+    group.add(m); echoFibers.push(m);
+  }
+
+  scene.add(group);
+  sceneObjects.s4 = { group, particles, bgGlow, ringPts, echoFibers };
+}
+
+function updateScene4(dt, t, st) {
+  const { particles, bgGlow, ringPts, echoFibers } = sceneObjects.s4;
+
+  bgGlow.material.uniforms.uTime.value = t;
+
+  // Gentle particle drift
+  const pos = particles.geometry.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    pos.array[i*3+1] += Math.sin(t * 0.5 + i * 0.1) * 0.003;
+    pos.array[i*3]   += Math.cos(t * 0.4 + i * 0.07) * 0.002;
+  }
+  pos.needsUpdate = true;
+
+  // Ring fade in + rotate
+  ringPts.material.opacity = Math.min(0.55, st / 4);
+  ringPts.rotation.z += dt * 0.04;
+
+  // Echo fibers fade in subtly
+  echoFibers.forEach((f, i) => {
+    f.material.opacity = Math.min(0.18, (st - i * 0.15) / 3);
+  });
+
+  // Camera: calm, cinematic float
+  camera.position.x = Math.sin(t * 0.09) * 0.4;
+  camera.position.y = Math.cos(t * 0.07) * 0.2;
+  camera.position.z = 0;
+  camera.rotation.z = 0;
+  camera.lookAt(0, 0, -28);
+}
+
+// ══════════════════════════════════════════
+//  TRANSITIONS
+// ══════════════════════════════════════════
+const HUD_LABELS = [
+  '◈ DEEP SPACE  ·  SECTOR 7',
+  '◈ FIBER OPTIC ARRAY  ·  INITIALIZING',
+  '◈ WARP DRIVE  ·  ENGAGED',
+  '◈ DESTINATION  ·  REACHED',
+];
+const SCENE_TOTALS = [
+  CONFIG.sceneDurations.space,
+  CONFIG.sceneDurations.fiber,
+  CONFIG.sceneDurations.warp,
+  Infinity,
+];
+
+function transitionToScene(idx) {
+  ['s1','s2','s3','s4'].forEach((k, i) => {
+    if (sceneObjects[k]) sceneObjects[k].group.visible = (i === idx);
+  });
+  sceneTime = 0;
+  currentScene = idx;
+  sceneHud.style.opacity = '0';
+  setTimeout(() => {
+    sceneHud.textContent = HUD_LABELS[idx];
+    sceneHud.style.opacity = '1';
+  }, 700);
+}
+
+async function doFlash(dur) {
+  return new Promise(res => {
+    flashEl.style.transition = 'opacity 0.12s';
+    flashEl.style.opacity = '1';
+    setTimeout(() => {
+      flashEl.style.transition = `opacity ${dur * 0.65}ms ease`;
+      flashEl.style.opacity = '0';
+      setTimeout(res, dur * 0.65);
+    }, dur * 0.12);
+  });
+}
+
+function revealGradMessage() {
+  const name = nameInput?.value.trim() || '';
+  gradNameEl.textContent = name ? '✦  ' + name + '  ✦' : '';
+
+  gradMessage.classList.add('visible');
+
+  const animIn = (el, delay, extra = {}) => {
+    setTimeout(() => Object.assign(el.style, { opacity: '1', animation: 'floatUp 1.4s ease forwards', ...extra }), delay);
+  };
+
+  animIn(document.getElementById('grad-eyebrow'), 400);
+  animIn(document.getElementById('grad-congrats'), 1100, {
+    animation: 'floatUp 1.6s ease forwards, textGlow 4s 2.6s ease infinite'
+  });
+  setTimeout(() => {
+    const l = document.getElementById('grad-line');
+    l.classList.add('expand');
+    l.style.animation = 'lineGlow 3s 0.5s ease infinite';
+  }, 2100);
+  animIn(document.getElementById('grad-dept'), 2700);
+  if (name) animIn(gradNameEl, 3500, {
+    animation: 'floatUp 1.2s ease forwards, gradPulse 4s 1.5s ease infinite'
+  });
+}
+
+// ══════════════════════════════════════════
+//  MAIN LOOP
+// ══════════════════════════════════════════
+let seqStartTime = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (!running) { renderer.render(scene, camera); return; }
+
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t  = clock.getElapsedTime();
+  sceneTime += dt;
+
+  switch (currentScene) {
+    case 0: updateScene1(dt, t); break;
+    case 1: updateScene2(dt, t, sceneTime); break;
+    case 2: updateScene3(dt, t, sceneTime); break;
+    case 3: updateScene4(dt, t, sceneTime); break;
+  }
+
+  // Progress bar
+  const total = SCENE_TOTALS[currentScene];
+  if (total !== Infinity) {
+    progressBar.style.width = Math.min(100, (sceneTime * 1000 / total) * 100) + '%';
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ══════════════════════════════════════════
+//  SEQUENCE
+// ══════════════════════════════════════════
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+async function runSequence() {
+  running = true;
+  sceneHud.style.opacity = '1';
+  progressBar.style.width = '0';
+
+  transitionToScene(0);
+  await wait(CONFIG.sceneDurations.space);
+
+  transitionToScene(1);
+  await wait(CONFIG.sceneDurations.fiber);
+
+  rampToWarp();
+  transitionToScene(2);
+  await wait(CONFIG.sceneDurations.warp);
+
+  await doFlash(CONFIG.sceneDurations.flash);
+  rampToCalm();
+
+  progressBar.style.width = '100%';
+  transitionToScene(3);
+  revealGradMessage();
+
+  setTimeout(() => replayBtn.classList.add('show'), 5000);
+}
+
+// ══════════════════════════════════════════
+//  START / RESTART
+// ══════════════════════════════════════════
+function startExperience() {
+  startScreen.style.opacity = '0';
+  startScreen.style.pointerEvents = 'none';
+  setTimeout(() => { startScreen.style.display = 'none'; }, 1900);
+
+  if (!audioCtx) initAudio();
+  else if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  runSequence();
+}
+
+function restartExperience() {
+  replayBtn.classList.remove('show');
+  gradMessage.classList.remove('visible');
+  document.querySelectorAll('#grad-eyebrow,#grad-congrats,#grad-dept,#grad-name').forEach(el => {
+    el.style.opacity = '0'; el.style.animation = 'none';
+  });
+  const l = document.getElementById('grad-line');
+  l.classList.remove('expand'); l.style.animation = 'none';
+
+  running = false;
+  ['s1','s2','s3','s4'].forEach(k => {
+    if (sceneObjects[k]) sceneObjects[k].group.visible = false;
+  });
+  camera.position.set(0, 0, 0); camera.rotation.set(0, 0, 0);
+  clock.start();
+
+  ambientNodes.forEach(n => {
+    try { n.osc?.stop(); n.src?.stop(); } catch(e) {}
+  });
+  playAmbient();
+
+  progressBar.style.transition = 'none';
+  progressBar.style.width = '0';
+  setTimeout(() => { progressBar.style.transition = 'width 0.5s linear'; }, 50);
+
+  setTimeout(runSequence, 300);
+}
+
+// ══════════════════════════════════════════
+//  BOOTSTRAP
+// ══════════════════════════════════════════
+initThree();
+buildScene1();
+buildScene2();
+buildScene3();
+buildScene4();
+renderer.render(scene, camera);
+animate();
+
+document.getElementById('start-btn').addEventListener('click', startExperience);
+replayBtn.addEventListener('click', restartExperience);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && startScreen.style.display !== 'none') startExperience();
+});
+
+console.log('%c🚀 GRADUATION — CS NETWORK SYSTEMS', 'color:#00bfff;font-size:1.2em;font-weight:bold');
+console.log('%cEdit CONFIG to adjust scene timings.', 'color:#006699');
+</script>
+</body>
+</html>

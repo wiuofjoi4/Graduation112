@@ -279,56 +279,30 @@
 
   /* Responsive dimensions for mobile landscape (wide width but short vertical height) */
   @media screen and (orientation: landscape) and (max-width: 950px) {
-    /* Hide non-essential top/bottom decorations to maximize space */
-    .start-tagline, .start-year, .grad-eyebrow, .grad-line { display: none !important; }
+    .start-title { font-size: clamp(1rem, 18vh, 2rem); margin: 0; }
+    .start-year { font-size: clamp(0.6rem, 8vh, 0.9rem); margin-bottom: 2vh; }
+    .start-logo { font-size: clamp(0.5rem, 6vh, 0.7rem); margin-bottom: 1vh; padding: 0; }
+    .start-tagline { margin-bottom: 1vh; font-size: clamp(0.4rem, 5vh, 0.6rem); }
+    #start-btn { padding: 3vh 6vh; font-size: clamp(0.5rem, 6vh, 0.6rem); margin: 0; }
     
-    .start-title { font-size: 16vh; margin: 0; line-height: 1.1; }
-    .start-logo { font-size: 7vh; margin-bottom: 2vh; padding: 0; }
-    
-    #start-btn { padding: 2vh 6vh; font-size: 6vh; margin-bottom: 2vh; }
-    
-    /* Convert from fixed to relative so it stacks cleanly without overlapping */
-    #personalize { position: relative; bottom: auto; left: auto; transform: none; flex-direction: row; justify-content: center; margin-top: 1vh; }
+    #personalize { bottom: 2vh; flex-direction: row; align-items: center; }
     #name-input-label { display: none; }
-    #name-input { width: 40vw; font-size: 6vh; padding: 1vh; text-align: center; }
+    #name-input { width: 140px; font-size: 0.6rem; padding: 0.2rem; }
     
-    #grad-message { padding: 2vh; justify-content: center; }
-    .grad-congrats { font-size: 14vh; margin: 0; line-height: 1.2; }
-    .grad-dept { font-size: 7vh; line-height: 1.3; margin-top: 2vh; }
-    .grad-name { margin-top: 2vh; font-size: 10vh; }
+    #grad-message { padding: 2vh; }
+    .grad-congrats { font-size: clamp(1rem, 16vh, 1.8rem); margin-bottom: 1vh; line-height: 1.1; }
+    .grad-line { margin: 2vh auto; width: min(350px, 70vw) !important; }
+    .grad-dept { font-size: clamp(0.55rem, 7vh, 0.8rem); line-height: 1.3; }
+    .grad-name { margin-top: 2vh; font-size: clamp(0.7rem, 9vh, 1.1rem); }
+    .grad-eyebrow { margin-bottom: 2vh; font-size: clamp(0.45rem, 5vh, 0.6rem); }
     
-    .corner { width: 10px; height: 10px; }
+    .corner { width: 15px; height: 15px; }
+    .corner-tl { top: 0.5rem; left: 0.5rem; } .corner-tr { top: 0.5rem; right: 0.5rem; }
+    .corner-bl { bottom: 0.5rem; left: 0.5rem; } .corner-br { bottom: 0.5rem; right: 0.5rem; }
     
-    #scene-hud { top: 2vh; font-size: 4vh; }
-    #replay-btn { bottom: 2vh; right: 2vh; padding: 1vh 2vh; font-size: 4vh; }
-    #social-credit { display: none !important; }
-  }
-
-  /* Landscape prompt for mobile */
-  #landscape-prompt {
-    display: none;
-    position: fixed; inset: 0; background: #000; z-index: 10000;
-    flex-direction: column; align-items: center; justify-content: center;
-    color: #00bfff; font-family: 'Orbitron', sans-serif; text-align: center; padding: 2rem;
-  }
-  .phone-icon {
-    width: 40px; height: 70px; border: 3px solid #00bfff; border-radius: 6px;
-    margin-bottom: 2rem; position: relative;
-    animation: rotatePhone 2s ease-in-out infinite;
-  }
-  .phone-icon::after {
-    content: ''; position: absolute;
-    bottom: 4px; left: 50%; transform: translateX(-50%);
-    width: 8px; height: 8px; border-radius: 50%; background: #00bfff;
-  }
-  @keyframes rotatePhone {
-    0%   { transform: rotate(0deg); }
-    50%  { transform: rotate(-90deg); }
-    100% { transform: rotate(-90deg); }
-  }
-  @media screen and (orientation: portrait) and (max-width: 900px) {
-    #landscape-prompt { display: flex; }
-    #canvas-container, #start-screen, #grad-message, #replay-btn, #social-credit, #scene-hud, #scanline, #vignette, #progress-bar { display: none !important; }
+    #scene-hud { top: 2vh; font-size: 0.45rem; }
+    #replay-btn { bottom: 2vh; right: 2vh; padding: 0.4rem 0.8rem; font-size: 0.45rem; }
+    #social-credit { bottom: 2vh; left: 2vh; font-size: 0.4rem; line-height: 1.4; }
   }
 
   /* Portrait layout for mobile */
@@ -361,15 +335,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<!-- Landscape Prompt -->
-<div id="landscape-prompt">
-  <div class="phone-icon"></div>
-  <h2>ROTATE YOUR DEVICE</h2>
-  <p style="margin-top:1rem; font-size:0.8rem; letter-spacing:0.1em; line-height:1.6; color:#00bfff88;">
-    Please switch to landscape mode<br>for the full cinematic experience.
-  </p>
-</div>
 
 <div id="scanline"></div>
 <div id="vignette"></div>

@@ -276,11 +276,53 @@
     0%,100% { box-shadow: 0 0 8px #00bfff44; }
     50%     { box-shadow: 0 0 20px #00bfffbb; }
   }
+
+  /* Landscape prompt for mobile */
+  #landscape-prompt {
+    display: none;
+    position: fixed; inset: 0;
+    background: #000;
+    z-index: 10000;
+    flex-direction: column; align-items: center; justify-content: center;
+    color: #00bfff; font-family: 'Orbitron', sans-serif;
+    text-align: center; padding: 2rem;
+  }
+  .phone-icon {
+    width: 40px; height: 70px;
+    border: 3px solid #00bfff; border-radius: 6px;
+    margin-bottom: 2rem;
+    position: relative;
+    animation: rotatePhone 2s ease-in-out infinite;
+  }
+  .phone-icon::after {
+    content: ''; position: absolute;
+    bottom: 4px; left: 50%; transform: translateX(-50%);
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #00bfff;
+  }
+  @keyframes rotatePhone {
+    0%   { transform: rotate(0deg); }
+    50%  { transform: rotate(-90deg); }
+    100% { transform: rotate(-90deg); }
+  }
+  @media screen and (orientation: portrait) and (max-width: 900px) {
+    #landscape-prompt { display: flex; }
+    #canvas-container, #start-screen, #grad-message, #replay-btn, #social-credit, #scene-hud { display: none !important; }
+  }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
+
+<!-- Landscape Prompt -->
+<div id="landscape-prompt">
+  <div class="phone-icon"></div>
+  <h2>ROTATE YOUR DEVICE</h2>
+  <p style="margin-top:1rem; font-size:0.8rem; letter-spacing:0.1em; line-height:1.6; color:#00bfff88;">
+    Please switch to landscape mode<br>for the full cinematic experience.
+  </p>
+</div>
 
 <div id="scanline"></div>
 <div id="vignette"></div>

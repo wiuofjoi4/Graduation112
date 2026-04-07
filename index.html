@@ -408,8 +408,8 @@
   <div class="grad-name" id="grad-name"></div>
 </div>
 
-<!-- Background Music -->
-<audio id="bg-music" preload="auto" loop style="width:0; height:0; position:absolute; visibility:hidden;">
+<!-- Background Music: ضع الملف بجانب index.html بنفس الاسم music.mpeg -->
+<audio id="bg-music" preload="auto" loop playsinline style="width:0; height:0; position:absolute; visibility:hidden;">
   <source src="music.mpeg" type="audio/mpeg">
 </audio>
 
@@ -427,6 +427,8 @@
 //  CONFIG
 // ══════════════════════════════════════════
 const CONFIG = {
+  /** تشغيل music.mpeg بعد بدء الرحلة (بعد دخول المشهد الأول) بالميلي ثانية */
+  musicDelayMs: 1600,
   sceneDurations: {
     space: 7000,
     fiber: 9000,
@@ -444,6 +446,7 @@ let currentScene = 0;
 let sceneTime = 0;
 let running = false;
 let audioCtx = null, gainNode = null, ambientNodes = [];
+let bgMusicTimer = null;
 
 const container    = document.getElementById('canvas-container');
 const startScreen  = document.getElementById('start-screen');
@@ -1243,10 +1246,27 @@ function animate() {
 // ══════════════════════════════════════════
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
+function scheduleBackgroundMusic() {
+  if (bgMusicTimer) clearTimeout(bgMusicTimer);
+  const bgMusic = document.getElementById('bg-music');
+  if (!bgMusic) return;
+  const delay = typeof CONFIG.musicDelayMs === 'number' ? CONFIG.musicDelayMs : 1600;
+  bgMusicTimer = setTimeout(() => {
+    bgMusicTimer = null;
+    bgMusic.currentTime = 0;
+    bgMusic.volume = 0.9;
+    bgMusic.play().catch(e => {
+      console.warn('تعذر تشغيل music.mpeg:', e);
+    });
+  }, delay);
+}
+
 async function runSequence() {
   running = true;
   sceneHud.style.opacity = '1';
   progressBar.style.width = '0';
+
+  scheduleBackgroundMusic();
 
   transitionToScene(0);
   await wait(CONFIG.sceneDurations.space);
@@ -1275,16 +1295,6 @@ function startExperience() {
   startScreen.style.opacity = '0';
   startScreen.style.pointerEvents = 'none';
   setTimeout(() => { startScreen.style.display = 'none'; }, 1900);
-
-  // Play background music (custom mp4)
-  const bgMusic = document.getElementById('bg-music');
-  if (bgMusic) {
-    bgMusic.volume = 1.0;
-    bgMusic.play().catch(e => {
-      console.warn("Audio load/play Error:", e);
-      alert("تعذر تشغيل الصوت! تأكد أن الملف اسمه 'music.mpeg' وموجود داخل نفس المجلد مع هذا الملف بمساره الصحيح.");
-    });
-  }
 
   if (!audioCtx) initAudio();
   else if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -1315,9 +1325,10 @@ function restartExperience() {
 
   const bgMusic = document.getElementById('bg-music');
   if (bgMusic) {
+    bgMusic.pause();
     bgMusic.currentTime = 0;
-    bgMusic.play().catch(e => console.warn("Audio play prevented:", e));
   }
+  if (bgMusicTimer) { clearTimeout(bgMusicTimer); bgMusicTimer = null; }
 
   progressBar.style.transition = 'none';
   progressBar.style.width = '0';

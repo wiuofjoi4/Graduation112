@@ -409,7 +409,10 @@
 </div>
 
 <!-- Background Music -->
-<video id="bg-music" src="music.mp4" loop style="display:none;" playsinline></video>
+<audio id="bg-music" preload="auto" loop style="width:0; height:0; position:absolute; visibility:hidden;">
+  <source src="music.mp4" type="audio/mp4">
+  <source src="music.mp4" type="video/mp4">
+</audio>
 
 <button id="replay-btn">↩ REPLAY</button>
 
@@ -1274,9 +1277,15 @@ function startExperience() {
   startScreen.style.pointerEvents = 'none';
   setTimeout(() => { startScreen.style.display = 'none'; }, 1900);
 
-  // Play background music and initialize Web Audio
+  // Play background music (custom mp4)
   const bgMusic = document.getElementById('bg-music');
-  if (bgMusic) bgMusic.play().catch(e => console.warn("Audio play prevented:", e));
+  if (bgMusic) {
+    bgMusic.volume = 1.0;
+    bgMusic.play().catch(e => {
+      console.warn("Audio load/play Error:", e);
+      alert("تعذر تشغيل الصوت! تأكد أن الملف اسمه 'music.mp4' وموجود داخل نفس المجلد مع هذا الملف بمساره الصحيح.");
+    });
+  }
 
   if (!audioCtx) initAudio();
   else if (audioCtx.state === 'suspended') audioCtx.resume();
